@@ -1,7 +1,7 @@
 name: OpenDataBusUserEnvironment
 description: |
   User Environment of the Open Data Bus system
-version: 0
+version: 1
 category: 
 maintainer: BlueTab
 license: Apache
