@@ -1,8 +1,8 @@
 .catalog:
   name: OpenDataBusCore
-  version: 0 
+  version: 1
   description: "Open Data Bus Core"
-  uuid: opendatabuscore-0
+  uuid: opendatabuscore-1
   questions:
     - variable: "datanodes"
       description: "Number of data nodes for HDFS."
