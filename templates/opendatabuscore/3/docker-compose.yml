@@ -1,0 +1,81 @@
+version: "2"
+services:
+
+  namenode:
+    image: bde2020/hadoop-namenode:1.0.0-hadoop2.7.1
+    hostname: namenode
+    container_name: namenode
+    domainname: hadoop
+    networks: ["vnet"]
+    environment:
+      - CLUSTER_NAME=opendatabus
+    env_file:
+      - ./hadoop-hive.env
+    ports:
+      - "50070:50070"
+      - "8020:8020"
+      - "8081:8081"
+
+  datanode1:
+    image: bde2020/hadoop-namenode:1.0.0-hadoop2.7.1
+    domainname: hadoop
+    hostname: datanode1
+    container_name: datanode1
+    networks: ["vnet"]
+    env_file:
+      - ./hadoop-hive.env
+
+  hive-server:
+    image: bde2020/hive
+    container_name: hive-server
+    networks: ["vnet"]
+    env_file:
+      - ./hadoop-hive.env
+    environment:
+      - "HIVE_CORE_CONF_javax_jdo_option_ConnectionURL=jdbc:postgresql://hive-metastore/metastore"
+    links:
+      - "hive-metastore"
+      - "namenode"
+    ports:
+      - "10000:10000"
+
+  hive-metastore:
+    image: bde2020/hive
+    container_name: hive-metastore
+    env_file:
+      - ./hadoop-hive.env
+    networks: ["vnet"]
+    command: /opt/hive/bin/hive --service metastore
+
+  hive-metastore-postgresql:
+    image: postgresqldb
+    container_name: postgresqldb
+    hostname: postgresqldb.vnet
+    networks: ["vnet"]
+
+  coordinator-1:
+    container_name: coordinator-1
+    networks: ["vnet"]
+    depends_on:
+      - hive-server
+      - hive-metastore
+      - hive-metastore-postgresql
+    links:
+      - hive-metastore-postgresql:reto1db
+    hostname: coordinator-1.vnet
+    image: reto1prestodb
+    environment:
+      - PRESTO_JVM_MAX_HEAP=512M
+      - PRESTO_QUERY_MAX_MEMORY=1GB
+      - PRESTO_QUERY_MAX_MEMORY_PER_NODE=256MB
+      - TERM=xterm
+      - PRESTO_DISCOVERY_PORT=8888
+      - PRESTO_DISCOVERY_URI=http://coordinator-1.vnet:8888
+    ports: 
+      - 8888:8888
+    command: coordinator
+      
+networks:
+  vnet:
+    external:
+      name: vnet 
