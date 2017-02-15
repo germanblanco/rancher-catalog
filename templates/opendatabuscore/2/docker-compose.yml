@@ -1,0 +1,33 @@
+version: "2"
+services:
+
+  db:
+    container_name: reto1db
+    image: reto1db
+    networks: ["vnet"]
+    ports:
+      - 3306:3306
+    expose:
+      - 3306
+    environment: 
+      MYSQL_ROOT_PASSWORD: passwd
+
+  coordinator-1:
+    container_name: coordinator-1
+    networks: ["vnet"]
+    depends_on:
+      - db
+    links:
+      - db:reto1db
+    hostname: coordinator-1.vnet
+    image: reto1prestodb
+    ports: 
+      - 8888:8888
+    env_file:
+      - ./hola.env
+    command: coordinator
+      
+networks:
+  vnet:
+    external:
+      name: vnet 
