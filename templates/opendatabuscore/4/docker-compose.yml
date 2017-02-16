@@ -6,7 +6,7 @@ services:
     hostname: namenode
     container_name: namenode
     links:
-      - "namenode"
+      - "datanode1"
     networks: ["vnet"]
     environment:
       - CLUSTER_NAME=opendatabus
