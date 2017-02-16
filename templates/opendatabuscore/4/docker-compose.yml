@@ -2,7 +2,7 @@ version: "2"
 services:
 
   namenode:
-    image: bde2020/hadoop-namenode:1.0.0-hadoop2.7.1
+    image: bde2020/hadoop-namenode:1.0.0-hadoop2.7.1-java8
     hostname: namenode
     container_name: namenode
     domainname: hadoop
@@ -41,12 +41,10 @@ services:
       - "8081:8081"
 
   datanode1:
-    image: bde2020/hadoop-namenode:1.0.0-hadoop2.7.1
+    image: bde2020/hadoop-datanode:1.0.0-hadoop2.7.1-java8
     domainname: hadoop
     hostname: datanode1
     container_name: datanode1
-    volumes:
-      - /hadoop/dfs/data
     networks: ["vnet"]
     environment:
       - CLUSTER_NAME=opendatabus
