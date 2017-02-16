@@ -5,7 +5,6 @@ services:
     image: bde2020/hadoop-namenode:1.1.0-hadoop2.7.1-java8
     hostname: namenode
     container_name: namenode
-    domainname: hadoop
     networks: ["vnet"]
     environment:
       - CLUSTER_NAME=opendatabus
@@ -42,7 +41,6 @@ services:
 
   datanode1:
     image: bde2020/hadoop-datanode:1.1.0-hadoop2.7.1-java8
-    domainname: hadoop
     hostname: datanode1
     container_name: datanode1
     networks: ["vnet"]
