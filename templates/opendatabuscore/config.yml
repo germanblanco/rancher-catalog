@@ -1,7 +1,7 @@
 name: OpenDataBusCore
 description: |
   Core of the Open Data Bus system
-version: 5
+version: 6
 category: 
 maintainer: BlueTab
 license: Apache

@@ -1,0 +1,123 @@
+version: "2"
+services:
+
+  namenode:
+    image: namenode
+    hostname: namenode
+    container_name: namenode
+    networks: ["vnet"]
+    ports:
+      - "50070:50070"
+      - "8020:8020"
+      - "8081:8081"
+
+  datanode1:
+    image: datanode
+    hostname: datanode1
+    container_name: datanode1
+    links:
+      - "namenode"
+    networks: ["vnet"]
+
+  hive-server:
+    image: bde2020/hive
+    container_name: hive-server
+    networks: ["vnet"]
+    environment:
+      - HIVE_CORE_CONF_javax_jdo_option_ConnectionURL=jdbc:postgresql://hive-metastore/metastore
+      - HIVE_SITE_CONF_javax_jdo_option_ConnectionDriverName=org.postgresql.Driver
+      - HIVE_SITE_CONF_javax_jdo_option_ConnectionUserName=hive
+      - HIVE_SITE_CONF_javax_jdo_option_ConnectionPassword=hive
+      - HIVE_SITE_CONF_datanucleus_autoCreateSchema=false
+      - HIVE_SITE_CONF_hive_metastore_uris=thrift://hive-metastore:9083
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
+      - CORE_CONF_hadoop_http_staticuser_user=root
+      - CORE_CONF_hadoop_proxyuser_hue_hosts=*
+      - CORE_CONF_hadoop_proxyuser_hue_groups=*
+      - HDFS_CONF_dfs_webhdfs_enabled=true
+      - HDFS_CONF_dfs_permissions_enabled=false
+      - YARN_CONF_yarn_log___aggregation___enable=true
+      - YARN_CONF_yarn_resourcemanager_recovery_enabled=true
+      - YARN_CONF_yarn_resourcemanager_store_class=org.apache.hadoop.yarn.server.resourcemanager.recovery.FileSystemRMStateStore
+      - YARN_CONF_yarn_resourcemanager_fs_state___store_uri=/rmstate
+      - YARN_CONF_yarn_nodemanager_remote___app___log___dir=/app-logs
+      - YARN_CONF_yarn_log_server_url=http://historyserver:8188/applicationhistory/logs/
+      - YARN_CONF_yarn_timeline___service_enabled=true
+      - YARN_CONF_yarn_timeline___service_generic___application___history_enabled=true
+      - YARN_CONF_yarn_resourcemanager_system___metrics___publisher_enabled=true
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+      - YARN_CONF_yarn_timeline___service_hostname=historyserver
+      - YARN_CONF_yarn_resourcemanager_address=resourcemanager:8032
+      - YARN_CONF_yarn_resourcemanager_scheduler_address=resourcemanager:8030
+      - YARN_CONF_yarn_resourcemanager_resource__tracker_address=resourcemanager:8031
+    links:
+      - "hive-metastore"
+      - "namenode"
+    ports:
+      - "10000:10000"
+
+  hive-metastore:
+    image: bde2020/hive
+    container_name: hive-metastore
+    environment:
+      - HIVE_SITE_CONF_javax_jdo_option_ConnectionURL=jdbc:postgresql://hive-metastore-postgresql/metastore
+      - HIVE_SITE_CONF_javax_jdo_option_ConnectionDriverName=org.postgresql.Driver
+      - HIVE_SITE_CONF_javax_jdo_option_ConnectionUserName=hive
+      - HIVE_SITE_CONF_javax_jdo_option_ConnectionPassword=hive
+      - HIVE_SITE_CONF_datanucleus_autoCreateSchema=false
+      - HIVE_SITE_CONF_hive_metastore_uris=thrift://hive-metastore:9083
+      - CORE_CONF_fs_defaultFS=hdfs://namenode:8020
+      - CORE_CONF_hadoop_http_staticuser_user=root
+      - CORE_CONF_hadoop_proxyuser_hue_hosts=*
+      - CORE_CONF_hadoop_proxyuser_hue_groups=*
+      - HDFS_CONF_dfs_webhdfs_enabled=true
+      - HDFS_CONF_dfs_permissions_enabled=false
+      - YARN_CONF_yarn_log___aggregation___enable=true
+      - YARN_CONF_yarn_resourcemanager_recovery_enabled=true
+      - YARN_CONF_yarn_resourcemanager_store_class=org.apache.hadoop.yarn.server.resourcemanager.recovery.FileSystemRMStateStore
+      - YARN_CONF_yarn_resourcemanager_fs_state___store_uri=/rmstate
+      - YARN_CONF_yarn_nodemanager_remote___app___log___dir=/app-logs
+      - YARN_CONF_yarn_log_server_url=http://historyserver:8188/applicationhistory/logs/
+      - YARN_CONF_yarn_timeline___service_enabled=true
+      - YARN_CONF_yarn_timeline___service_generic___application___history_enabled=true
+      - YARN_CONF_yarn_resourcemanager_system___metrics___publisher_enabled=true
+      - YARN_CONF_yarn_resourcemanager_hostname=resourcemanager
+      - YARN_CONF_yarn_timeline___service_hostname=historyserver
+      - YARN_CONF_yarn_resourcemanager_address=resourcemanager:8032
+      - YARN_CONF_yarn_resourcemanager_scheduler_address=resourcemanager:8030
+      - YARN_CONF_yarn_resourcemanager_resource__tracker_address=resourcemanager:8031
+    networks: ["vnet"]
+    command: /opt/hive/bin/hive --service metastore
+
+  hive-metastore-postgresql:
+    image: postgresqldb
+    container_name: postgresqldb
+    hostname: postgresqldb.vnet
+    networks: ["vnet"]
+
+  coordinator-1:
+    container_name: coordinator-1
+    networks: ["vnet"]
+    depends_on:
+      - hive-server
+      - hive-metastore
+      - hive-metastore-postgresql
+    links:
+      - hive-metastore-postgresql:reto1db
+    hostname: coordinator-1.vnet
+    image: reto1prestodb
+    environment:
+      - PRESTO_JVM_MAX_HEAP=512M
+      - PRESTO_QUERY_MAX_MEMORY=1GB
+      - PRESTO_QUERY_MAX_MEMORY_PER_NODE=256MB
+      - TERM=xterm
+      - PRESTO_DISCOVERY_PORT=8888
+      - PRESTO_DISCOVERY_URI=http://coordinator-1.vnet:8888
+    ports: 
+      - 8888:8888
+    command: coordinator
+      
+networks:
+  vnet:
+    external:
+      name: vnet 
